@@ -40,7 +40,6 @@ class WeatherRepository(
     }
 
     fun getWeather(): LiveData<List<WeatherEntity>> {
-        // TODO uncomment when DAO is defined and delete all the other lines on this function
          return dao.retrieveWeatherData()
     }
 }

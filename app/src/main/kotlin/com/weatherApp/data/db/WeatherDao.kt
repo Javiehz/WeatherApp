@@ -6,14 +6,8 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 
-//TODO define WeatherDao interface
-/**
- * It needs three functions:
- * insertWeatherData: inserts a list of WeatherEntity values.
- * retrieveWeatherData: gets all the data stored on the weather_data table,
- * ordered by time (ascending).
- * clearDatabase: deletes all the data on the weather_data table
- */
+
+
 
 @Dao
 interface WeatherDao {
