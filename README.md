@@ -1,1 +1,1 @@
-This is the easiest version of the Practice of Juan Carlos (Maximum note: 7).
+This is the Practice of Juan Carlos (WeatherApp)
