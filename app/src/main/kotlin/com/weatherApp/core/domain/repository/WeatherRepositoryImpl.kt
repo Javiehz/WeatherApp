@@ -29,26 +29,31 @@ class WeatherRepositoryImpl(
     }
 
     override suspend fun fetchWeather() {
-        val savedLocation = getSavedLocation()
-        val latitude = savedLocation.second
-        val longitude = savedLocation.third
+        val (city, lat, lon) = getSavedLocation()
 
-        if(latitude == null || longitude == null){
-            return
-        }
+        if (city == null || lat == null || lon == null) return
 
-        val response = api.getWeather(latitude, longitude)
+        val locationKey = city
+            .lowercase()
+            .replace(" ", "_")
+
+        val response = api.getWeather(lat, lon)
+
         val temperatures = response.hourly.temperature_2m.mapIndexed { index, temp ->
             Weather(
                 id = 0,
                 temperature = temp,
-                time = response.hourly.time[index]
+                time = response.hourly.time[index],
+                locationKey = locationKey
             )
         }
+
         dao.clearDatabase()
-        dao.insertWeatherData(temperatures.map{it.toEntity()})
-        syncWithFirebase(temperatures)
+        dao.insertWeatherData(temperatures.map { it.toEntity() })
+
+        syncWithFirebase(temperatures, locationKey)
     }
+
 
     override suspend fun getTodaysWeather():List<Weather> {
         return dao.retrieveWeatherData().map{it.toDomain()}
@@ -58,16 +63,21 @@ class WeatherRepositoryImpl(
      * TODO obtiene todos los registros de la BBDD
      */
     override suspend fun getHistoricWeather(): List<Weather> {
-        return firebase.getWeatherData()
+        val city = prefs.getCityName() ?: return emptyList()
+        val locationKey = city
+            .lowercase()
+            .replace(" ", "_")
+
+        return firebase.getWeatherData(locationKey)
     }
 
     /**
      * TODO añade solo los elementos cuya clave no exista ya en la BBDD remota
      */
-    private suspend fun syncWithFirebase(data: List<Weather>) {
-        val existingKeys = firebase.getExistingWeatherIds()
+    private suspend fun syncWithFirebase(data: List<Weather>, locationKey: String) {
+        val existingKeys = firebase.getExistingWeatherIds(locationKey)
         data.forEach { weather ->
-            if(!existingKeys.contains(weather.time)){
+            if (!existingKeys.contains(weather.time)) {
                 firebase.addWeatherData(weather)
             }
         }

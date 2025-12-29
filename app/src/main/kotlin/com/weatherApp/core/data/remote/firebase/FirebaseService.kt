@@ -18,11 +18,9 @@ class FirebaseService {
      * TODO obtiene todos los registros almacenados en la BBDD, ordenados por fecha y hora
      * Devuelve un listado de Weather
      */
-    suspend fun getWeatherData(): List<Weather> {
-        val snapshot = database.get().await()
-        val list = snapshot.children.mapNotNull {
-            it.getValue(Weather::class.java)
-        }
+    suspend fun getWeatherData(locationKey: String): List<Weather> {
+        val snapshot = database.child(locationKey).get().await()
+        val list = snapshot.children.mapNotNull { it.getValue(Weather::class.java) }
         return list.sortedBy { it.time }
     }
 
@@ -30,10 +28,11 @@ class FirebaseService {
      * TODO obtiene todos los IDs (fecha/hora) de los registros almacenados en la BBDD
      * No es necesario implementarla si no la necesitáis en vuestra solución
      */
-    suspend fun getExistingWeatherIds(): Set<String> {
-        val snapshot = database.get().await()
+    suspend fun getExistingWeatherIds(locationKey: String): Set<String> {
+        val snapshot = database.child(locationKey).get().await()
         return snapshot.children.mapNotNull { it.key }.toSet()
     }
+
 
     /**
      * TODO añade un nuevo registro a la BBDD
@@ -41,7 +40,10 @@ class FirebaseService {
      */
     suspend fun addWeatherData(weatherData: Weather) {
         val key = weatherData.time
-        database.child(key).setValue(weatherData).await()
+        database
+            .child(weatherData.locationKey)
+            .child(key)
+            .setValue(weatherData)
+            .await()
     }
 }
-
